@@ -1,4 +1,4 @@
-# celtic-llm
+# Celtic-llm
 A research project investigating whether large language models can learn and separate closely related Celtic languages through LoRA fine-tuning, and whether these languages form structured clusters in embedding spac
 
 # Celtic LLM Fine-Tuning Project 🌍🧠
