@@ -104,7 +104,80 @@ The dataset is naturally imbalanced (Irish and Welsh have more data than Manx or
 - preventing any single language from dominating training
 
 This step is critical for preventing the model from collapsing toward high-resource languages.
+# Controlling for English-Mediated Alignment
 
+## The Core Problem
+
+English-mediated alignment is the critical methodological problem this project must address head on.
+
+If everything is routed through English during training, then Irish *ceann* and Welsh *pen* are both close to English *head* — so of course they end up close to each other. That tells you nothing about Celtic structure; it just tells you English is doing the work.
+
+---
+
+## How to Exclude English from the Embedding Analysis
+
+When running the embedding analysis, simply do not feed English sentences in. Concretely:
+
+```python
+# Instead of this:
+all_sentences = dataset["ga"] + dataset["cy"] + dataset["en"] + ...
+
+# Do this:
+celtic_only = dataset["ga"] + dataset["cy"] + dataset["gd"] + \
+              dataset["br"] + dataset["gv"] + dataset["kw"]
+```
+
+Then run the encoder over `celtic_only` only, collect the embeddings, and plot. English never enters the embedding space being visualised.
+
+### The Important Subtlety
+
+Excluding English from the visualisation does not remove its influence from the model weights. The model was trained on English, so English semantics are baked into the representations whether or not English sentences appear in the plot.
+
+What this exclusion actually tests is:
+
+> *Given a model whose weights were shaped by English, do Celtic sentences still find each other without English acting as an explicit bridge at inference time?*
+
+That is a meaningful and honest question. The claim is not that English had no influence — the test is whether Celtic structure exists **on top of** that influence.
+
+---
+
+## Four Tests to Isolate Celtic Structure
+
+### Test 1 — Remove English from the Embedding Analysis
+
+When running t-SNE or UMAP, exclude English sentences entirely. If Celtic cognates still cluster together without English present, this is evidence of genuine cross-Celtic structure rather than English-mediated proximity.
+
+### Test 2 — Compare Against a Non-Celtic Multilingual Baseline
+
+Take **mBERT** or **NLLB**, both of which were also trained with English alignment, and run the same cluster analysis. If the fine-tuned Celtic model shows tighter Celtic clustering than mBERT despite similar English exposure, the delta is attributable to Celtic-specific fine-tuning rather than to English alignment alone.
+
+### Test 3 — Probe for Phonological vs. Semantic Proximity
+
+Find word pairs that are Celtic cognates but have **different English translations** — false cognates or semantically drifted words across branches. If these still cluster together in the Celtic model but not in mBERT, that is genuine Celtic structure, because English alignment cannot explain it.
+
+### Test 4 — The Basque Control
+
+Basque has borrowed Celtic loanwords historically. If those specific Basque loanwords cluster near their Celtic source words in the embedding space, but unrelated Basque vocabulary does not, that is striking evidence the model has learned something real beyond English-mediated semantics.
+
+---
+
+## The Cleanest Experimental Design
+
+Run three separate t-SNE plots:
+
+1. Celtic + English sentences together
+2. Celtic sentences only
+3. Celtic sentences only, using a non-Celtic-fine-tuned baseline (mBERT)
+
+If plot 2 shows tighter Celtic clustering than plot 3, the fine-tuning did something real beyond English alignment. That comparison is the actual contribution.
+
+---
+
+## Framing for the Paper
+
+> *"We acknowledge English-mediated alignment as a potential confound and design the following controls to isolate genuinely Celtic structure in the embedding space."*
+
+This is not a weakness — it is rigorous methodology, and it is exactly what a reviewer would want to see.
 ---
 
 ## Training Process
