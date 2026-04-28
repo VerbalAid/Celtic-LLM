@@ -119,7 +119,22 @@ Do **not** do this:
 
 This leads to Irish dominance, partial Welsh learning, and near-zero learning for Manx and Cornish.
 
----
+Problem 1: Cornish and Manx data ceiling
+The solution is synthetic data generation, done carefully. Concretely:
+
+Take your existing Irish and Scottish Gaelic sentences and use a larger model (GPT-4, Claude) to generate Celtic-register paraphrases, then tag them as kw or gv with a confidence flag
+Use back-translation bootstrapping — translate Cornish/Manx → English → back to Cornish/Manx using a general MT system, filter by round-trip similarity, and keep only high-confidence pairs
+Mine Swadesh list cognates across Celtic languages to create small but high-precision parallel sets for Manx and Cornish specifically
+Pull from Omniglot, Kevin Scannell's Crúbadán corpus, and the Cornish Language Board's published materials — these are often overlooked but add real sentences
+
+The key framing is: you are not pretending to have more data than you do. You label synthetic data as synthetic, train with it, and then test on real held-out data only. That is methodologically sound.
+
+Problem 2: Circular embedding hypothesis
+The fix is to reframe your research question so it goes beyond confirming the family tree. Specifically:
+
+Instead of asking "do Celtic languages cluster together?", ask "does fine-tuning change the geometry of the embedding space, and in what direction?" — compare pre- and post-fine-tuning clustering, which is genuinely unknown
+Add a negative control: include a non-Celtic language like Basque (isolate) or Finnish (Uralic) in your embedding analysis. If your clusters are meaningful, these should sit clearly outside the Celtic group. If they don't, that's an interesting finding in itself
+Ask "does the model conflate Goidelic and Brythonic languages?" — i.e. does it correctly separate Irish/Scottish Gaelic/Manx from Welsh/Breton/Cornish, or does it lump all Celtic together? That sub-family separation question is much less obvious and much more interesting
 
 ## 8. The Core Principle
 
