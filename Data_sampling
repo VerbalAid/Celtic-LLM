@@ -1,0 +1,128 @@
+# Balanced Multilingual Sampling
+
+Balanced multilingual sampling is one of the most important techniques in low-resource language modelling, and for a project like this it is not optional — it is required for scientifically valid results.
+
+---
+
+## 1. Why You Cannot Simply Mix Everything Together
+
+If you merge all datasets (OPUS + Tatoeba + Wikipedia dumps) without balancing, you will get:
+
+- English-heavy dominance, even if you try to exclude it — it leaks through alignment data
+- Irish becoming the de facto "largest Celtic language" due to greater OPUS coverage
+- Cornish and Manx reduced to noise-level datasets
+
+The result is a model biased toward the most frequent languages that effectively ignores the rare ones.
+
+---
+
+## 2. The Correct Solution: Balanced Sampling
+
+The goal is to enforce **equal exposure per language during training**, not equal raw dataset size. There are three standard approaches.
+
+### A) Temperature-Based Sampling (Recommended)
+
+Rather than sampling proportionally to dataset size, you apply:
+
+```
+P(language) ∝ (dataset_size) ^ (1 / T)
+```
+
+where `T` is a temperature value, typically between 1.5 and 5 for low-resource balancing.
+
+- High-resource languages get downsampled
+- Low-resource languages get upweighted
+- Prevents overfitting to Irish/Welsh while starving Cornish/Manx
+
+### B) Fixed Per-Language Quotas
+
+Enforce a hard cap on samples per language per epoch:
+
+| Language | Samples per Epoch |
+|---|---|
+| Irish (`ga`) | 50k |
+| Welsh (`cy`) | 50k |
+| Scottish Gaelic (`gd`) | 50k |
+| Breton (`br`) | 50k |
+| Manx (`gv`) | 50k |
+| Cornish (`kw`) | 50k |
+
+Even if Cornish only has 8k real sentences, you can reach the quota through oversampling with repetition and augmentation.
+
+### C) Batch-Level Balancing
+
+Each training batch is constructed to contain exactly one sample per language:
+
+- 1 × Irish
+- 1 × Welsh
+- 1 × Scottish Gaelic
+- 1 × Breton
+- 1 × Manx
+- 1 × Cornish
+
+This approach is particularly stable when fine-tuning smaller models.
+
+---
+
+## 3. Oversampling Low-Resource Languages
+
+For Cornish and Manx especially, oversampling alone is unlikely to be sufficient. You will also need light data augmentation such as:
+
+- word dropout
+- back-translation
+- paraphrasing
+
+Without this, the model will not learn these languages in any meaningful sense.
+
+---
+
+## 4. Should English Be Included?
+
+English is not strictly necessary, but removing it entirely has consequences. Without English as an anchor, you are effectively training a **Celtic-to-Celtic latent translation system** — covering pairs such as `ga ↔ cy`, `ga ↔ gd`, and `br ↔ gv`. This setup is harder to converge, more unstable in early training, and more sensitive to data quality.
+
+---
+
+## 5. Recommended Two-Stage Training Setup
+
+The approach used in most strong multilingual systems is as follows:
+
+**Stage 1 — With English Pivot**
+
+Train on:
+- Celtic → English
+- English → Celtic
+
+**Stage 2 — Remove English Dependence**
+
+Fine-tune on:
+- Celtic ↔ Celtic direct pairs
+
+This gives you stability first, then specialisation.
+
+---
+
+## 6. Target Training Distribution
+
+Regardless of raw dataset sizes, your effective training distribution should approximate:
+
+- 16–20% per Celtic language (roughly equal)
+- Controlled oversampling for Manx and Cornish
+- Optionally 5–10% mixed multilingual contrast examples
+
+---
+
+## 7. Key Mistake to Avoid
+
+Do **not** do this:
+
+> *"I have 150M tokens so I will just shuffle everything together."*
+
+This leads to Irish dominance, partial Welsh learning, and near-zero learning for Manx and Cornish.
+
+---
+
+## 8. The Core Principle
+
+> **Dataset size is not what matters — exposure frequency is.**
+
+Enforcing even distribution is what makes the experiment scientifically valid and ensures all six Celtic languages receive meaningful training signal.
