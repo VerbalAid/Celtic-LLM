@@ -198,7 +198,13 @@ This project is not just about translation. I am testing whether a multilingual 
 ---
 
 ## Expected Results
+It's low implementation cost — a classification head on top of a frozen encoder is a few lines of PyTorch
 
+How to make it even stronger:
+
+Test the classifier before and after fine-tuning on the same frozen base. If accuracy improves post fine-tuning, you have direct evidence that LoRA is sharpening language separation in the representation space — that's a clean, publishable result
+Try it on the Basque negative control too — the classifier should assign it nowhere near any Celtic language, and if it does, that tells you something about your embeddings
+Report confusion matrices rather than just accuracy — you almost certainly want to see where Irish/Scottish Gaelic blur together versus where Welsh/Breton blur together. That maps directly onto the Goidelic/Brythonic split
 Realistically:
 
 - **Irish** and **Welsh** will perform best
