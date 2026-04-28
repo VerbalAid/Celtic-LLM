@@ -217,4 +217,21 @@ The embedding space may show clustering by language or by dataset source (e.g. O
 
 ## Why This Project Matters
 
+well I would deploy on hugging face. compare my translation model to to other irish translation models. and same for the other languages. I will find a test dataset to evaluate all translation of models across languages and benchmark them.
+How to benchmark smartly:
+For Irish specifically, compare against:
+
+Helsinki-NLP/opus-mt-ga-en on Hugging Face — this is the obvious baseline
+Qomhrá if you can access it
+Google Translate via their API (free tier is fine for a test set)
+
+For Welsh, Helsinki-NLP has opus-mt models for cy-en too. For Breton and Scottish Gaelic coverage is thinner, which actually works in your favour — if you beat a sparse baseline on those languages, that's a meaningful result.
+
+For the test dataset:
+
+Flores-200 includes Irish and Welsh and is the standard low-resource MT benchmark — using it makes your results directly comparable to published papers
+OPUS newstest splits if available for your language pairs
+Tatoeba has held-out test splits you can use cleanly
+
+Using Flores-200 in particular is a strong move — you can cite it properly and anyone in the field will immediately recognise it as a legitimate benchmark.
 This sits at the intersection of low-resource NLP, multilingual LLMs, and computational linguistics. It builds on existing work but explores something that has not been clearly done: **training and analyzing a unified Celtic multilingual model**.
